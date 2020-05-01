@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 import requests
+from requests.exceptions import RequestException
 from tqdm import tqdm
 
 
@@ -34,20 +35,24 @@ def download_svs_tcga(file_uuid, output_filename, overwrite=False):
 
     data_endpt = "https://api.gdc.cancer.gov/data/{}".format(file_uuid)
 
-    # TODO: this can definitely break
     response = requests.get(data_endpt, headers={"Content-Type": "application/json"})
 
-    # The file name can be found in the header within the Content-Disposition key.
-    response_head_cd = response.headers["Content-Disposition"]
-
-    with open(output_filename, "wb") as output_file:
-        output_file.write(response.content)
+    try:
+        # The file name can be found in the header within the Content-Disposition key.
+        response_head_cd = response.headers["Content-Disposition"]
+    except KeyError as e:
+        # TODO: log the exception
+        raise
+    else:
+        with open(output_filename, "wb") as output_file:
+            output_file.write(response.content)
 
 
 def main(metadata_file, output_folder, data_source):
 
     if data_source == 'TCGA':
 
+        not_downloaded = []
         csv = pd.read_csv(metadata_file)
 
         for i, row in tqdm(csv.iterrows()):
@@ -65,6 +70,14 @@ def main(metadata_file, output_folder, data_source):
                 new_path = f'{file_no_ext}_{ext}'
 
                 download_svs_tcga(uuid, new_path)
+
+            except (RequestException, KeyError) as e:
+                print(f'{type(e).__name__}: {e}')
+
+                not_downloaded.append((uuid, filename))
+
+        if not_downloaded:
+            print('Not downloaded: ', '\n'.join(not_downloaded))
 
 
 if __name__ == '__main__':

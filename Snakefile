@@ -9,8 +9,9 @@ SVS_DIR = f'{DATA_DIR}/svs'
 
 rule download_svs:
     input:
-        f'data/{DATASET}/slides_filename_uuid_red.csv'
+        'preprocessing/download_svs.py',
+        f'data/{DATASET}/slides_filename_uuid.csv'
     output:
         directory(SVS_DIR)
     shell:
-        'python preprocessing/download_svs.py {input[0]} {output[0]} TCGA'
+        'python preprocessing/download_svs.py {input[1]} {output[0]} TCGA'
