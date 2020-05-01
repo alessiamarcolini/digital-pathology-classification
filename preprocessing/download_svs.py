@@ -38,7 +38,7 @@ def download_svs_tcga(file_uuid, output_filename, overwrite=False):
     response = requests.get(data_endpt, headers={"Content-Type": "application/json"})
 
     try:
-        # The file name can be found in the header within the Content-Disposition key.
+        # "Content-Disposition" key is found only if the UUID corresponds to a valid file
         response_head_cd = response.headers["Content-Disposition"]
     except KeyError as e:
         # TODO: log the exception
@@ -74,7 +74,7 @@ def main(metadata_file, output_folder, data_source):
             except (RequestException, KeyError) as e:
                 print(f'{type(e).__name__}: {e}')
 
-                not_downloaded.append((uuid, filename))
+                not_downloaded.append(uuid)
 
         if not_downloaded:
             print('Not downloaded: ', '\n'.join(not_downloaded))
