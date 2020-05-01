@@ -2,3 +2,5 @@
 .snakemake
 
 data
+
+__pycache__
