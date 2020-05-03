@@ -1,4 +1,4 @@
-name: digital-pathology
+name: digital-pathology-dev
 channels:
   - conda-forge
   - bioconda
@@ -11,6 +11,8 @@ dependencies:
   - requests=2.23.0
   - scikit-learn=0.22.2
   - scikit-image=0.16.2
+  - ipykernel=5.2.1
+  - black
   - pixman=0.36.0
   - openslide-python=1.1.1
 
