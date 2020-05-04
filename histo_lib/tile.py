@@ -1,4 +1,4 @@
-from collections import namedtuple
+import os
 
 import numpy as np
 import skimage.morphology as morph
@@ -8,7 +8,7 @@ from skimage.filters import threshold_otsu
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
-Coordinates = namedtuple("Coordinates", (["x_ul", "y_ul", "x_br", "y_br"]))
+from .util import CoordinatePair
 
 
 class Tile:
@@ -19,8 +19,8 @@ class Tile:
         self._image = image
         self._level = level
 
-        if not isinstance(coords, Coordinates):
-            self.coords = Coordinates(*coords)
+        if not isinstance(coords, CoordinatePair):
+            self.coords = CoordinatePair(*coords)
         else:
             self.coords = coords
 
@@ -82,7 +82,9 @@ class Tile:
 
     def save(self, path):
         """
-        Save tile at given path.
+        Save tile at given path. The format to use is determined from the filename
+        extension (to be compatible to PIL.Image formats). 
+        If no extension is provided, the image will be saved in png format.
 
         Arguments
         ---------
@@ -90,6 +92,11 @@ class Tile:
             Path to which the tile is saved.
 
         """
+        ext = os.path.splitext(path)[1]
+
+        if not ext:
+            path = f"{path}.png"
+
         self._image.save(path)
 
     @staticmethod

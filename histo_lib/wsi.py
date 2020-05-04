@@ -10,7 +10,8 @@ from skimage import color
 from skimage.filters import threshold_otsu
 from skimage.measure import label, regionprops
 
-from .tile import Coordinates, Tile
+from .tile import Tile
+from .util import CoordinatePair, scale_coordinates
 
 Region = namedtuple("Region", ("index", "area", "bbox", "center"))
 
@@ -45,36 +46,6 @@ class WSI:
         print("Micron x:         {:.3f}".format(mpp_x))
         print("Micron y:         {:.3f}".format(mpp_y))
 
-    @staticmethod
-    def scale_coordinates(reference_coords, reference_size, target_size):
-        """
-        Compute the coordinates corresponding to a scaled version of the image.
-        
-        Parameters
-        ----------
-        reference_coords: tuple, array-like
-            (x, y) pair of coordinates referring to the upper left and lower right corners respectively.
-            The function expects a tuple of four elements or a tuple of two pairs of coordinates as input.
-        reference_size: array_like of int
-            Reference (width, height) size to which input coordinates refer to
-        target_size: array_like of int
-            Target (width, height) size of the resulting scaled image
-        
-        Returns
-        -------
-        coords: Coordinates
-            Coordinates in the scaled image
-            
-        """
-        assert len(reference_size) == 2
-        assert len(target_size) == 2
-        assert len(reference_coords) == 2 or len(reference_coords) == 4
-
-        reference_coords = np.asarray(reference_coords).ravel()
-        reference_size = np.tile(reference_size, 2)
-        target_size = np.tile(target_size, 2)
-        return np.floor((reference_coords * target_size) / reference_size).astype(int)
-
     def get_thumbnail(self, size):
         """
         Get image thumbnail.
@@ -102,30 +73,21 @@ class WSI:
 
         return self.image.get_thumbnail(size)
 
-    def calculate_tissue_region(self, thumbnail_size=1000, return_thumbnail=False):
+    @property
+    def tissue_box_coords_wsi(self):
         """
-        Compute the coordinates of the box containing the tissue.
-        
-        Parameters
-        ----------
-        thumbnail_size: int
-            Size of the thumbnail where to compute the box
-        return_thumbnail: bool
-            Whether to return the thumbnail image
-        
+        Returns the coordinates of the box containing the tissue.
         
         Returns
         -------
         box_coords: Coordinates
             [x_ul, y_ul, x_br, y_br] coordinates of the box containing the tissue
-        thumbnail: PIL.Image 
-            Tissue image in the thumbnail (if return_thumbnail=True)
-        
+
         """
 
         w_out, h_out = self.get_dimensions(level=0)  # ! openslide image dimensions: WxH
 
-        thumb = np.array(self.get_thumbnail(thumbnail_size))
+        thumb = np.array(self.get_thumbnail(1000))
         h_in, w_in, ch = thumb.shape
 
         thumb = color.rgb2gray(thumb)
@@ -147,20 +109,13 @@ class WSI:
         ]
         biggest_region = max(regions, key=lambda r: r.area)
         y_ul, x_ul, y_br, x_br = biggest_region.bbox
-        out_coords = Coordinates(
-            *self.scale_coordinates(
-                reference_coords=(x_ul, y_ul, x_br, y_br),
-                reference_size=(w_in, h_in),
-                target_size=(w_out, h_out),
-            )
+        out_coords = scale_coordinates(
+            reference_coords=(x_ul, y_ul, x_br, y_br),
+            reference_size=(w_in, h_in),
+            target_size=(w_out, h_out),
         )
-        if return_thumbnail:
-            hr = slice(y_ul, y_br)
-            wr = slice(x_ul, x_br)
-            thumb_out = thumb[hr, wr]
-            return out_coords, thumb_out
-        else:
-            return out_coords
+
+        return out_coords
 
     def extract_tile(self, coords, level):
         """
@@ -168,14 +123,14 @@ class WSI:
         
         Parameters
         ----------
-        coords: Coordinates
+        coords : Coordinates
             Coordinates in the first level (0)
-        level: int 
+        level : int 
             Level from which to extract the tile
         
         Returns
         -------
-        tile: Tile
+        tile : Tile
             Image containing the selected tile
 
         """
@@ -185,15 +140,15 @@ class WSI:
             self.image.level_dimensions
         ), f"this image has only {len(self.image.level_dimensions)} levels"
 
-        coords_level = Coordinates(
-            *self.scale_coordinates(
-                reference_coords=coords,
-                reference_size=self.get_dimensions(level=0),
-                target_size=self.get_dimensions(level=level),
-            )
+        coords_level = scale_coordinates(
+            reference_coords=coords,
+            reference_size=self.get_dimensions(level=0),
+            target_size=self.get_dimensions(level=level),
         )
-        h_l = coords_level[3] - coords_level[1]
-        w_l = coords_level[2] - coords_level[0]
+
+        h_l = coords_level.y_br - coords_level.y_ul
+        w_l = coords_level.x_br - coords_level.x_ul
+
         patch = self.image.read_region(
             location=(coords[0], coords[1]), level=level, size=(w_l, h_l)
         )
