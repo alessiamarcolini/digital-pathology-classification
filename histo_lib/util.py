@@ -33,5 +33,5 @@ def scale_coordinates(reference_coords, reference_size, target_size):
     reference_size = np.tile(reference_size, 2)
     target_size = np.tile(target_size, 2)
     return CoordinatePair(
-        *np.floor((reference_coords * target_size) / reference_size).astype(int)
+        *np.floor((reference_coords * target_size) / reference_size).astype("int64")
     )
