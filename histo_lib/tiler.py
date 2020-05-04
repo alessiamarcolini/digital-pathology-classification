@@ -75,37 +75,23 @@ class RandomTiler(Tiler):
         iteration = valid_tile_counter = 0
         tile_w_lvl, tile_h_lvl = self.tile_size
 
-        fake_tile_coords_lvl = CoordinatePair(0, 0, tile_w_lvl, tile_h_lvl)
-        print(fake_tile_coords_lvl)
-
-        fake_tile_coords_wsi = scale_coordinates(
-            reference_coords=fake_tile_coords_lvl,
-            reference_size=self.wsi.get_dimensions(level=self.level),
-            target_size=self.wsi.get_dimensions(level=0),
-        )
-
-        tile_w_wsi = fake_tile_coords_wsi.x_br
-        tile_h_wsi = fake_tile_coords_wsi.y_br
-
-        print(fake_tile_coords_wsi)
-
-        tissue_box_coords_wsi = self.box_coords_wsi
-
         while True:
             iteration += 1
 
-            x_ul_wsi = np.random.randint(
-                tissue_box_coords_wsi.x_ul,
-                tissue_box_coords_wsi.x_br - (tile_w_wsi + 1),
+            x_ul_lvl = np.random.randint(
+                self.box_coords_lvl.x_ul, self.box_coords_lvl.x_br - (tile_w_lvl + 1),
             )
-            y_ul_wsi = np.random.randint(
-                tissue_box_coords_wsi.y_ul,
-                tissue_box_coords_wsi.y_br - (tile_w_wsi + 1),
+            y_ul_lvl = np.random.randint(
+                self.box_coords_lvl.y_ul, self.box_coords_lvl.y_br - (tile_h_lvl + 1),
             )
-            x_br_wsi = x_ul_wsi + tile_w_wsi
-            y_br_wsi = y_ul_wsi + tile_w_wsi
+            x_br_lvl = x_ul_lvl + tile_w_lvl
+            y_br_lvl = y_ul_lvl + tile_h_lvl
 
-            tile_wsi_coords = CoordinatePair(x_ul_wsi, y_ul_wsi, x_br_wsi, y_br_wsi)
+            tile_wsi_coords = scale_coordinates(
+                reference_coords=(x_ul_lvl, y_ul_lvl, x_br_lvl, y_br_lvl),
+                reference_size=self.wsi.get_dimensions(level=self.level),
+                target_size=self.wsi.get_dimensions(level=0),
+            )
 
             tile = self.wsi.extract_tile(tile_wsi_coords, self.level)
 
