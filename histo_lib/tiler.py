@@ -8,11 +8,38 @@ from .util import CoordinatePair, scale_coordinates
 
 class Tiler(ABC):
     @abstractmethod
-    def extract(self, image):
+    def extract(self):
         raise NotImplementedError
 
 
 class RandomTiler(Tiler):
+    """
+    Class for extracting random tiles from a WSI, at the given level, with the given size.
+
+    Attributes
+    ----------
+    wsi : WSI
+        The Whole Slide Image from which extract the tiles.
+    tile_size : int, tuple or list of int
+        (width, height) of the extracted tiles.
+    n_tiles : int
+        Maximum number of tiles to extract.
+    level : int
+        Level from which extract the tiles. Default is 0.
+    seed : int
+        Seed for RandomState. Must be convertible to 32 bit unsigned integers. Default is 7.
+    check_tissue : bool
+        Whether to check if the tile has enough tissue to be saved. Default is True.
+    prefix : str
+        Prefix to be added to the tile filename. Default is an empty string.
+    suffix : str
+        Suffix to be added to the tile filename. Default is '.png'
+    max_iter : int
+        Maximum number of iterations performed when searching for eligible (if check_tissue=True) tiles.
+        Must be grater than or equal to `n_tiles`.
+
+    """
+
     def __init__(
         self,
         wsi,
@@ -25,9 +52,39 @@ class RandomTiler(Tiler):
         suffix=".png",
         max_iter=1e4,
     ):
+        """
+
+        Parameters
+        ----------
+        wsi : WSI
+            The Whole Slide Image from which extract the tiles.
+        tile_size : int, tuple or list of int
+            (width, height) of the extracted tiles.
+        n_tiles : int
+            Maximum number of tiles to extract.
+        level : int
+            Level from which extract the tiles. Default is 0.
+        seed : int
+            Seed for RandomState. Must be convertible to 32 bit unsigned integers. Default is 7.
+        check_tissue : bool
+            Whether to check if the tile has enough tissue to be saved. Default is True.
+        prefix : str
+            Prefix to be added to the tile filename. Default is an empty string.
+        suffix : str
+            Suffix to be added to the tile filename. Default is '.png'
+        max_iter : int
+            Maximum number of iterations performed when searching for eligible (if check_tissue=True) tiles.
+            Must be grater than or equal to `n_tiles`.
+        box_coords_wsi : Coordinates
+            Coordinates of the tissue box at level 0.
+        box_coords_lvl : Coordinates
+            Coordinates of the tissue box at the requested level for tiles extraction.
+            If `level` is equal to 0, `box_coords_lvl` will be equal to `box_coords_wsi`.
+
+        """
+
         super().__init__()
         np.random.seed(seed)
-        self.wsi = wsi
 
         try:
             getattr(tile_size, "__len__")
@@ -38,19 +95,23 @@ class RandomTiler(Tiler):
         except AssertionError as ae:
             raise ae
 
-        self.tile_size = tile_size
+        assert (
+            max_iter >= n_tiles
+        ), f"The maximum number of iterations must be grater than or equal to the maximum number of tiles. Got max_iter={max_iter} and n_tiles={n_tiles}."
 
         assert (
             level in self.wsi.levels
         ), f"Level {level} not available. Please select {', '.join(self.wsi.levels[:-1])} or {self.wsi.levels[-1]}"
 
+        self.wsi = wsi
+        self.tile_size = tile_size
+        self.max_iter = max_iter
         self.level = level
         self.n_tiles = n_tiles
         self.seed = seed
         self.check_tissue = check_tissue
         self.prefix = prefix
         self.suffix = suffix
-        self.max_iter = max_iter
 
         if check_tissue:
             self.box_coords_wsi = self.wsi.tissue_box_coords_wsi
@@ -69,7 +130,19 @@ class RandomTiler(Tiler):
 
     def random_tiles_generator(self):
         """
-        
+        Generate Random Tiles within the tissue box.
+
+        Stops if:
+        * the number of extracted tiles is equal to `n_tiles` OR
+        * the maximum number of iterations `max_iter` is reached
+
+        Yields
+        ------
+        tile : Tile
+            The extracted Tile
+        coords : Coordinates
+            The level-0 coordinates of the extracted tile
+
         """
 
         iteration = valid_tile_counter = 0
@@ -107,6 +180,10 @@ class RandomTiler(Tiler):
 
     def extract(self):
         """
+        Extract tiles consuming `random_tiles_generator` and save them to disk,
+        following this filename pattern:
+            `{prefix}tile_{tiles_counter}_level{level}_{x_ul_wsi}-{y_ul_wsi}-{x_br_wsi}-{y_br_wsi}{suffix}`
+
         """
         # TODO: manage alpha channel
 
