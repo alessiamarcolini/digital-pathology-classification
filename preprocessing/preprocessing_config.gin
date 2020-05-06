@@ -1,0 +1,5 @@
+extract_random_tiles.tile_size = 512
+extract_random_tiles.n_tiles = 10
+extract_random_tiles.level = 2
+extract_random_tiles.seed = 7
+extract_random_tiles.check_tissue = True

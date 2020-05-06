@@ -12,7 +12,10 @@ dependencies:
   - scikit-learn=0.22.2
   - scikit-image=0.16.2
   - ipykernel=5.2.1
+  - notebook
   - black
   - pixman=0.36.0
   - openslide-python=1.1.1
-
+  - pip
+  - pip:
+    - gin-config==0.3.0
