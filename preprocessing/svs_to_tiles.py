@@ -73,6 +73,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract random tiles from a WSI")
     parser.add_argument("wsi_filename", type=str, help="Filename of the WSI")
     parser.add_argument(
+        "output_folder", type=str, help="Folder in which to save the tiles"
+    )
+    parser.add_argument(
         "extraction_mode",
         type=str,
         help=f"Tiles extraction mode. Available options: {', '.join(accepted_extraction_modes)}",
@@ -80,7 +83,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     wsi_filename = args.wsi_filename
+    output_folder = Path(args.output_folder)
     extraction_mode = args.extraction_mode
+
+    output_folder.parent.mkdir(parents=True, exist_ok=True)
 
     assert (
         extraction_mode in accepted_extraction_modes
@@ -89,4 +95,4 @@ if __name__ == "__main__":
     current_directory = Path(os.path.abspath(os.path.dirname(__file__)))
     gin.parse_config_file(current_directory / "preprocessing_config.gin")
 
-    extract_random_tiles(wsi_filename)
+    extract_random_tiles(wsi_filename, prefix=f"{output_folder}/")
