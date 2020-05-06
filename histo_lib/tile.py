@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import numpy as np
 import skimage.morphology as morph
@@ -96,6 +97,8 @@ class Tile:
 
         if not ext:
             path = f"{path}.png"
+
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
 
         self._image.save(path)
 
