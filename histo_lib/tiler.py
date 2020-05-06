@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from .tile import Tile
-from .util import CoordinatePair, scale_coordinates
+from .utils import CoordinatePair, scale_coordinates
 from .wsi import WSI
 
 

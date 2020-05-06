@@ -8,7 +8,7 @@ from skimage.filters import threshold_otsu
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
-from .util import CoordinatePair
+from .utils import CoordinatePair
 
 
 class Tile:

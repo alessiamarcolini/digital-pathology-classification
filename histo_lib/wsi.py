@@ -11,7 +11,7 @@ from skimage.filters import threshold_otsu
 from skimage.measure import label, regionprops
 
 from .tile import Tile
-from .util import CoordinatePair, scale_coordinates
+from .utils import CoordinatePair, scale_coordinates
 
 Region = namedtuple("Region", ("index", "area", "bbox", "center"))
 
