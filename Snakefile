@@ -28,13 +28,13 @@ rule svs_to_random_tiles:
         'preprocessing/svs_to_tiles.py',
         expand('{svs_dir}/{{svs_filename_no_ext}}.svs', svs_dir=SVS_DIR)
     output:
-        directory(expand('{tiles_per_svs_dir}/{{svs_filename_no_ext}}', tiles_per_svs_dir=TILES_PER_SVS_DIR))
+        directory(expand('{tiles_per_svs_dir}/{{svs_filename_no_ext}}/tiles', tiles_per_svs_dir=TILES_PER_SVS_DIR))
     shell:
         'python preprocessing/svs_to_tiles.py {input[1]} {output[0]} random'
 
 rule svs_to_random_tiles_all:
     input:
         'preprocessing/svs_to_tiles.py',
-        directory(expand('{tiles_per_svs_dir}/{svs_filename}', tiles_per_svs_dir=TILES_PER_SVS_DIR, svs_filename=SVS_filenames_no_ext))
+        directory(expand('{tiles_per_svs_dir}/{svs_filename_no_ext}/tiles', tiles_per_svs_dir=TILES_PER_SVS_DIR, svs_filename_no_ext=SVS_filenames_no_ext))
        
 
