@@ -47,3 +47,7 @@ def wsi_filename_to_wsi_id(wsi_filename):
 
     wsi_filename = os.path.basename(wsi_filename)
     return "-".join(wsi_filename.split("-")[:4])
+
+
+def tile_filename_to_wsi_filename(tile_filename):
+    return tile_filename.split("_")[0]

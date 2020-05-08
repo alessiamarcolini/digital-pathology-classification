@@ -2,8 +2,11 @@ import argparse
 import os
 
 from preprocessing.check_tiles import check_tile, save_csv
-from preprocessing.tcga_utils import (wsi_filename_to_patient,
-                                      wsi_filename_to_wsi_id)
+from preprocessing.tcga_utils import (
+    tile_filename_to_wsi_filename,
+    wsi_filename_to_patient,
+    wsi_filename_to_wsi_id,
+)
 
 
 def main():
@@ -25,15 +28,18 @@ def main():
     correct_tiles_paths = filter(check_tile, tiles_paths)
     correct_tiles_filenames = list(map(os.path.basename, correct_tiles_paths))
 
-    correct_patients = list(map(wsi_filename_to_patient, correct_tiles_filenames))
-    correct_wsi_ids = list(map(wsi_filename_to_wsi_id, correct_tiles_filenames))
+    correct_wsi_filenames = list(
+        map(tile_filename_to_wsi_filename), correct_tiles_filenames
+    )
+
+    correct_patients = list(map(wsi_filename_to_patient, correct_wsi_filenames))
+    correct_wsi_ids = list(map(wsi_filename_to_wsi_id, correct_wsi_filenames))
 
     csv_data = {
-            "filename": correct_tiles_filenames,
-            "patient": correct_patients,
-            "wsi_id": correct_wsi_ids,
-        }
-    
+        "filename": correct_tiles_filenames,
+        "patient": correct_patients,
+        "wsi_id": correct_wsi_ids,
+    }
 
     save_csv(
         csv_data, csv_out_filename,
