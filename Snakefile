@@ -38,3 +38,22 @@ rule svs_to_random_tiles_all:
         directory(expand('{tiles_per_svs_dir}/{svs_filename_no_ext}/tiles', tiles_per_svs_dir=TILES_PER_SVS_DIR, svs_filename_no_ext=SVS_filenames_no_ext))
        
 
+def tiles_filename(wildcards):
+    filenames = sorted([f for f in os.listdir(f'{TILES_PER_SVS_DIR}/{wildcards.svs_filename_no_ext}/tiles') if f.endswith('.png')])
+    return directory(expand('{tiles_per_svs_dir}/{{svs_filename_no_ext}}/tiles/{tile_filename}', tiles_per_svs_dir=TILES_PER_SVS_DIR, tile_filename=filenames))
+
+
+rule check_tiles_per_svs:
+    input:
+        'preprocessing_check_tiles.py',
+        filenames = tiles_filename
+    output:
+        expand('{tiles_per_svs_dir}/{{svs_filename_no_ext}}/correct_tiles_per_svs_filenames.csv', tiles_per_svs_dir=TILES_PER_SVS_DIR)
+    shell:
+        'python preprocessing_check_tiles.py {input.filenames} {output[0]}'
+
+rule check_tiles_all:
+    input:
+        'preprocessing_check_tiles.py',
+        expand('{tiles_per_svs_dir}/{svs_filename_no_ext}/correct_tiles_per_svs_filenames.csv', tiles_per_svs_dir=TILES_PER_SVS_DIR, svs_filename_no_ext=SVS_filenames_no_ext)
+
