@@ -1,5 +1,9 @@
-extract_random_tiles.tile_size = 512
+tile_size = 512
+
+extract_random_tiles.tile_size = %tile_size
 extract_random_tiles.n_tiles = 10
 extract_random_tiles.level = 2
 extract_random_tiles.seed = 7
 extract_random_tiles.check_tissue = True
+
+check_tile_shape.tile_size = %tile_size
