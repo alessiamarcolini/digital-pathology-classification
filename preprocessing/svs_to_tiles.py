@@ -95,4 +95,6 @@ if __name__ == "__main__":
     current_directory = Path(os.path.abspath(os.path.dirname(__file__)))
     gin.parse_config_file(current_directory / "preprocessing_config.gin")
 
-    extract_random_tiles(wsi_filename, prefix=f"{output_folder}/")
+    wsi_filename_no_ext = os.path.splitext(os.path.basename(wsi_filename))[0]
+
+    extract_random_tiles(wsi_filename, prefix=f"{output_folder}/{wsi_filename_no_ext}_")
