@@ -45,7 +45,7 @@ def tiles_filename(wildcards):
 
 rule check_tiles_per_svs:
     input:
-        'preprocessing_check_tiles.py',
+        'preprocessing_check_tiles_tcga.py',
         filenames = tiles_filename
     output:
         expand('{tiles_per_svs_dir}/{{svs_filename_no_ext}}/correct_tiles_per_svs_filenames.csv', tiles_per_svs_dir=TILES_PER_SVS_DIR)
@@ -54,6 +54,6 @@ rule check_tiles_per_svs:
 
 rule check_tiles_all:
     input:
-        'preprocessing_check_tiles.py',
+        'preprocessing_check_tiles_tcga.py',
         expand('{tiles_per_svs_dir}/{svs_filename_no_ext}/correct_tiles_per_svs_filenames.csv', tiles_per_svs_dir=TILES_PER_SVS_DIR, svs_filename_no_ext=SVS_filenames_no_ext)
 
