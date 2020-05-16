@@ -29,7 +29,7 @@ def main():
     correct_tiles_filenames = list(map(os.path.basename, correct_tiles_paths))
 
     correct_wsi_filenames = list(
-        map(tile_filename_to_wsi_filename), correct_tiles_filenames
+        map(tile_filename_to_wsi_filename, correct_tiles_filenames)
     )
 
     correct_patients = list(map(wsi_filename_to_patient, correct_wsi_filenames))
