@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import subprocess
 
 DATASET = 'TCGA-BRCA'
 DATA_DIR = Path('data')/ DATASET
@@ -14,27 +15,26 @@ SVS_filenames_no_ext = [os.path.splitext(f)[0] for f in SVS_filenames]
 # PREPROCESSING
 # -------------
 
-rule download_svs:
-    input:
-        'preprocessing/download_svs.py',
-        f'data/{DATASET}/slides_filename_uuid.csv'
-    output:
-        directory(SVS_DIR)
-    shell:
-        'python preprocessing/download_svs.py {input[1]} {output[0]} TCGA'
-
 rule svs_to_random_tiles:
     input:
-        'preprocessing/svs_to_tiles.py',
-        expand('{svs_dir}/{{svs_filename_no_ext}}.svs', svs_dir=SVS_DIR)
+        'preprocessing_svs_to_tiles.py',
+        ancient(SVS_DIR / '{svs_filename_no_ext}.svs')
     output:
-        directory(expand('{tiles_per_svs_dir}/{{svs_filename_no_ext}}', tiles_per_svs_dir=TILES_PER_SVS_DIR))
-    shell:
-        'python preprocessing/svs_to_tiles.py {input[1]} {output[0]} random'
+        dynamic('{tiles_per_svs_dir}/{svs_filename_no_ext}/tiles/{tile_filename}')
+    run:
+        output_folder = Path(output[0]).parent
+        subprocess.call(f'python preprocessing_svs_to_tiles.py {input[1]} {output_folder} random', shell=True)
 
-rule svs_to_random_tiles_all:
+rule check_tiles_per_svs:
     input:
-        'preprocessing/svs_to_tiles.py',
-        directory(expand('{tiles_per_svs_dir}/{svs_filename}', tiles_per_svs_dir=TILES_PER_SVS_DIR, svs_filename=SVS_filenames_no_ext))
-       
+        'preprocessing_check_tiles_tcga.py',
+        filenames = dynamic(expand('{tiles_per_svs_dir}/{{svs_filename_no_ext}}/tiles/{{tile_filename}}', tiles_per_svs_dir=TILES_PER_SVS_DIR))
+    output:
+        expand('{tiles_per_svs_dir}/{{svs_filename_no_ext}}/correct_tiles_per_svs_filenames.csv', tiles_per_svs_dir=TILES_PER_SVS_DIR)
+    shell:
+        'python preprocessing_check_tiles_tcga.py {input.filenames} {output[0]}'
 
+rule check_tiles_all:
+    input:
+        'preprocessing_check_tiles_tcga.py',
+        expand('{tiles_per_svs_dir}/{svs_filename_no_ext}/correct_tiles_per_svs_filenames.csv', tiles_per_svs_dir=TILES_PER_SVS_DIR, svs_filename_no_ext=SVS_filenames_no_ext)
