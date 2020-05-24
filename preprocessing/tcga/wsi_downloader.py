@@ -80,6 +80,9 @@ class TCGAWSIDownloader:
             with open(output_filename, "wb") as output_file:
                 output_file.write(response.content)
 
+    def _total_wsi_to_download(self, n):
+        return len(self.metadata) if n == 0 else n
+
     def download(self, n=0, overwrite_mode="skip"):
         """Download WSI from TCGA data portal.
 
@@ -108,7 +111,7 @@ class TCGAWSIDownloader:
                 f"overwrite_mode must be 'strict', 'overwrite' or 'skip'. Got {overwrite_mode}."
             )
 
-        total_wsi_to_download = len(self.metadata) if n == 0 else n
+        total_wsi_to_download = self._total_wsi_to_download(n)
         for i, row in tqdm(self.metadata.iterrows(), total=total_wsi_to_download):
 
             if n != 0 and i == n:
