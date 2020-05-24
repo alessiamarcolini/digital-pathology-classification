@@ -8,8 +8,24 @@ from tqdm import tqdm
 
 
 class TCGAWSIDownloader:
+    """TCGA WSI Downloader. 
+
+    Attributes
+    ----------
+    metadata_path : str or pathlib.Path
+        Path to the CSV file containing `uuid` and `filename` columns.
+        The UUID is the TCGA file unique identifier.
+    metadata : pandas.DataFrame
+        The metadata DataFrame
+    output_folder : str or pathlib.Path
+        Folder where to save the downloaded WSI
+    not_downloaded : list of str
+        UUIDs of the WSI for which some error happened during download
+
+    """
+
     def __init__(self, metadata_path, output_folder):
-        self._metadata_path = metadata_path
+        self._metadata_path = Path(metadata_path)
         self._output_folder = Path(output_folder)
         self._not_downloaded = []
 
