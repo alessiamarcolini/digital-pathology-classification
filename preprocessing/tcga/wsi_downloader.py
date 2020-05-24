@@ -136,4 +136,4 @@ class TCGAWSIDownloader:
                 self._not_downloaded.append(uuid)
 
         if self._not_downloaded:
-            print("Not downloaded: ", "\n".join(self.not_down_not_downloadedloaded))
+            print("Not downloaded: ", "\n".join(self._not_downloaded))
