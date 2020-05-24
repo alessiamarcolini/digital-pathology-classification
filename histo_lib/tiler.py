@@ -222,8 +222,7 @@ class RandomTiler(Tiler):
         random_tiles = self.random_tiles_generator(wsi)
 
         for tiles_counter, (tile, tile_wsi_coords) in enumerate(random_tiles):
-            x_ul_wsi, y_ul_wsi, x_br_wsi, y_br_wsi = tile_wsi_coords
-            tile_filename = f"{self.prefix}tile_{tiles_counter}_level{self.level}_{x_ul_wsi}-{y_ul_wsi}-{x_br_wsi}-{y_br_wsi}{self.suffix}"
+            tile_filename = self._tile_output_path(tile_wsi_coords, tiles_counter)
             tile.save(tile_filename)
             print(f"\t Tile {tiles_counter} saved: {tile_filename}")
         print(f"{tiles_counter} Random Tiles have been saved.")
@@ -261,6 +260,11 @@ class RandomTiler(Tiler):
         )
 
         return tile_wsi_coords
+
+    def _tile_output_path(self, tile_wsi_coords, tiles_counter):
+        x_ul_wsi, y_ul_wsi, x_br_wsi, y_br_wsi = tile_wsi_coords
+        tile_filename = f"{self.prefix}tile_{tiles_counter}_level{self.level}_{x_ul_wsi}-{y_ul_wsi}-{x_br_wsi}-{y_br_wsi}{self.suffix}"
+        return tile_filename
 
 
 class GridTiler(Tiler):
