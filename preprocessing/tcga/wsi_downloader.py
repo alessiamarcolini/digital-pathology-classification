@@ -80,6 +80,23 @@ class TCGAWSIDownloader:
             with open(output_filename, "wb") as output_file:
                 output_file.write(response.content)
 
+    @staticmethod
+    def _handle_existing_file(output_path, overwrite_mode):
+        if os.path.exists(output_path):
+            if overwrite_mode == "strict":
+                raise FileExistsError(
+                    f"File {output_path} exists. Please set overwrite_mode='overwrite'"
+                    " to overwrite already existing file, or overwrite_mode='skip' to skip download."
+                )
+            elif overwrite_mode == "overwrite":
+                os.remove(output_path)
+                to_skip = False
+            else:
+                to_slip = True
+        else:
+            to_skip = False
+        return to_skip
+
     def _total_wsi_to_download(self, n):
         return len(self.metadata) if n == 0 else n
 
@@ -121,22 +138,19 @@ class TCGAWSIDownloader:
             filename = row["filename"]
 
             output_path = self.output_folder / filename
-            if os.path.exists(output_path):
-                if overwrite_mode == "strict":
-                    raise FileExistsError(
-                        f"File {output_path} exists. Please set overwrite_mode='overwrite'"
-                        " to overwrite already existing file, or overwrite_mode='skip' to skip download."
-                    )
-                elif overwrite_mode == "overwrite":
-                    os.remove(output_path)
-                else:
-                    continue
             try:
-                self._download_single_wsi(uuid, output_path)
-            except (RequestException, KeyError) as e:
-                print(f"{type(e).__name__}: {e}")
+                to_skip = self._handle_existing_file(output_path, overwrite_mode)
+            except FileExistsError as e:
+                raise
 
-                self._not_downloaded.append(uuid)
+            else:
+                if not to_skip:
+                    try:
+                        self._download_single_wsi(uuid, output_path)
+                    except (RequestException, KeyError) as e:
+                        print(f"{type(e).__name__}: {e}")
+
+                        self._not_downloaded.append(uuid)
 
         if self._not_downloaded:
             print("Not downloaded: ", "\n".join(self._not_downloaded))
