@@ -154,7 +154,10 @@ class RandomTiler(Tiler):
 
     def random_tiles_generator(self, wsi):
         """
-        Generate Random Tiles within the tissue box of the wsi.
+        Generate Random Tiles within a WSI box.
+
+        If `check_tissue` attribute is True, the box corresponds to the tissue box,
+        otherwise it corresponds to the whole level.
 
         Stops if:
         * the number of extracted tiles is equal to `n_tiles` OR
@@ -173,28 +176,13 @@ class RandomTiler(Tiler):
             The level-0 coordinates of the extracted tile
 
         """
-        box_coords_lvl = self.box_coords_lvl(wsi)
 
         iteration = valid_tile_counter = 0
-        tile_w_lvl, tile_h_lvl = self.tile_size
 
         while True:
             iteration += 1
 
-            x_ul_lvl = np.random.randint(
-                box_coords_lvl.x_ul, box_coords_lvl.x_br - (tile_w_lvl + 1),
-            )
-            y_ul_lvl = np.random.randint(
-                box_coords_lvl.y_ul, box_coords_lvl.y_br - (tile_h_lvl + 1),
-            )
-            x_br_lvl = x_ul_lvl + tile_w_lvl
-            y_br_lvl = y_ul_lvl + tile_h_lvl
-
-            tile_wsi_coords = scale_coordinates(
-                reference_coords=(x_ul_lvl, y_ul_lvl, x_br_lvl, y_br_lvl),
-                reference_size=wsi.get_dimensions(level=self.level),
-                target_size=wsi.get_dimensions(level=0),
-            )
+            tile_wsi_coords = self._random_tile_coordinates(wsi)
 
             tile = wsi.extract_tile(tile_wsi_coords, self.level)
 
@@ -239,6 +227,40 @@ class RandomTiler(Tiler):
             tile.save(tile_filename)
             print(f"\t Tile {tiles_counter} saved: {tile_filename}")
         print(f"{tiles_counter} Random Tiles have been saved.")
+
+    def _random_tile_coordinates(self, wsi):
+        """Return random tile level-0 Coordinates within the tissue box.
+
+        Parameters
+        ----------
+        wsi : WSI
+            WSI from which calculate the coordinates.
+            Needed to calculate the box.
+
+        Returns
+        -------
+        Coordinates
+            Random tile Coordinates at level 0
+        """
+        box_coords_lvl = self.box_coords_lvl(wsi)
+        tile_w_lvl, tile_h_lvl = self.tile_size
+
+        x_ul_lvl = np.random.randint(
+            box_coords_lvl.x_ul, box_coords_lvl.x_br - (tile_w_lvl + 1),
+        )
+        y_ul_lvl = np.random.randint(
+            box_coords_lvl.y_ul, box_coords_lvl.y_br - (tile_h_lvl + 1),
+        )
+        x_br_lvl = x_ul_lvl + tile_w_lvl
+        y_br_lvl = y_ul_lvl + tile_h_lvl
+
+        tile_wsi_coords = scale_coordinates(
+            reference_coords=(x_ul_lvl, y_ul_lvl, x_br_lvl, y_br_lvl),
+            reference_size=wsi.get_dimensions(level=self.level),
+            target_size=wsi.get_dimensions(level=0),
+        )
+
+        return tile_wsi_coords
 
 
 class GridTiler(Tiler):
