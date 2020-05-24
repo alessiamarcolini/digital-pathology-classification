@@ -99,6 +99,59 @@ class RandomTiler(Tiler):
         self.prefix = prefix
         self.suffix = suffix
 
+    def box_coords(self, wsi):
+        """Return Coordinates at level 0 of the box to consider for tiles extraction.
+
+        If `check_tissue` attribute is True, the Coordinates corresponds to the tissue box,
+        otherwise they correspond to the original dimensions of the whole level 0.
+
+        Parameters
+        ----------
+        wsi : WSI
+            The WSI from which to extract the box coordinates
+
+        Returns
+        -------
+        Coordinates
+            Coordinates of the box
+
+        """
+        if self.check_tissue:
+            return wsi.tissue_box_coords_wsi
+        else:
+            w_wsi, h_wsi = wsi.get_dimensions(level=0)
+            return Coordinates(0, 0, w_wsi, h_wsi)
+
+    def box_coords_lvl(self, wsi):
+        """Return Coordinates at level `level` of the box to consider for tiles extraction.
+
+        If `check_tissue` attribute is True, the Coordinates corresponds to the tissue box,
+        otherwise they correspond to the original dimensions of the whole level.
+
+        Parameters
+        ----------
+        wsi : WSI
+            The WSI from which to extract the box coordinates
+
+        Returns
+        -------
+        Coordinates
+            Coordinates of the box
+
+        """
+        box_coords_wsi = self.box_coords(wsi)
+
+        if self.level != 0:
+            box_coords_lvl = scale_coordinates(
+                reference_coords=box_coords_wsi,
+                reference_size=wsi.get_dimensions(level=0),
+                target_size=wsi.get_dimensions(level=self.level),
+            )
+        else:
+            box_coords_lvl = box_coords_wsi
+
+        return box_coords_lvl
+
     def random_tiles_generator(self, wsi):
         """
         Generate Random Tiles within the tissue box of the wsi.
@@ -120,21 +173,7 @@ class RandomTiler(Tiler):
             The level-0 coordinates of the extracted tile
 
         """
-
-        if self.check_tissue:
-            box_coords_wsi = wsi.tissue_box_coords_wsi
-        else:
-            w_wsi, h_wsi = wsi.get_dimensions(level=0)
-            box_coords_wsi = Coordinates(0, 0, w_wsi, h_wsi)
-
-        if self.level != 0:
-            box_coords_lvl = scale_coordinates(
-                reference_coords=box_coords_wsi,
-                reference_size=wsi.get_dimensions(level=0),
-                target_size=wsi.get_dimensions(level=self.level),
-            )
-        else:
-            box_coords_lvl = box_coords_wsi
+        box_coords_lvl = self.box_coords_lvl(wsi)
 
         iteration = valid_tile_counter = 0
         tile_w_lvl, tile_h_lvl = self.tile_size
@@ -194,14 +233,11 @@ class RandomTiler(Tiler):
 
         random_tiles = self.random_tiles_generator(wsi)
 
-        tiles_counter = 0
-
-        for tile, tile_wsi_coords in random_tiles:
+        for tiles_counter, (tile, tile_wsi_coords) in enumerate(random_tiles):
             x_ul_wsi, y_ul_wsi, x_br_wsi, y_br_wsi = tile_wsi_coords
             tile_filename = f"{self.prefix}tile_{tiles_counter}_level{self.level}_{x_ul_wsi}-{y_ul_wsi}-{x_br_wsi}-{y_br_wsi}{self.suffix}"
             tile.save(tile_filename)
             print(f"\t Tile {tiles_counter} saved: {tile_filename}")
-            tiles_counter += 1
         print(f"{tiles_counter} Random Tiles have been saved.")
 
 
