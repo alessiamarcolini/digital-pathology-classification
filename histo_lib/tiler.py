@@ -152,7 +152,72 @@ class RandomTiler(Tiler):
 
         return box_coords_lvl
 
-    def random_tiles_generator(self, wsi):
+    def extract(self, wsi):
+        """
+        Extract tiles consuming `random_tiles_generator` and save them to disk,
+        following this filename pattern:
+            `{prefix}tile_{tiles_counter}_level{level}_{x_ul_wsi}-{y_ul_wsi}-{x_br_wsi}-{y_br_wsi}{suffix}`
+
+        Raises
+        ------
+        TypeError
+            If wsi is not an instance of WSI.
+
+        """
+        # TODO: manage alpha channel
+
+        np.random.seed(self.seed)
+
+        if not isinstance(wsi, WSI):
+            raise TypeError("wsi must be of type WSI.")
+
+        assert (
+            self.level in wsi.levels
+        ), f"Level {level} not available. Please select {', '.join(wsi.levels[:-1])} or {wsi.levels[-1]}"
+
+        random_tiles = self._random_tiles_generator(wsi)
+
+        for tiles_counter, (tile, tile_wsi_coords) in enumerate(random_tiles):
+            tile_filename = self._tile_output_path(tile_wsi_coords, tiles_counter)
+            tile.save(tile_filename)
+            print(f"\t Tile {tiles_counter} saved: {tile_filename}")
+        print(f"{tiles_counter} Random Tiles have been saved.")
+
+    def _random_tile_coordinates(self, wsi):
+        """Return random tile level-0 Coordinates within the tissue box.
+
+        Parameters
+        ----------
+        wsi : WSI
+            WSI from which calculate the coordinates.
+            Needed to calculate the box.
+
+        Returns
+        -------
+        Coordinates
+            Random tile Coordinates at level 0
+        """
+        box_coords_lvl = self.box_coords_lvl(wsi)
+        tile_w_lvl, tile_h_lvl = self.tile_size
+
+        x_ul_lvl = np.random.randint(
+            box_coords_lvl.x_ul, box_coords_lvl.x_br - (tile_w_lvl + 1),
+        )
+        y_ul_lvl = np.random.randint(
+            box_coords_lvl.y_ul, box_coords_lvl.y_br - (tile_h_lvl + 1),
+        )
+        x_br_lvl = x_ul_lvl + tile_w_lvl
+        y_br_lvl = y_ul_lvl + tile_h_lvl
+
+        tile_wsi_coords = scale_coordinates(
+            reference_coords=(x_ul_lvl, y_ul_lvl, x_br_lvl, y_br_lvl),
+            reference_size=wsi.get_dimensions(level=self.level),
+            target_size=wsi.get_dimensions(level=0),
+        )
+
+        return tile_wsi_coords
+
+    def _random_tiles_generator(self, wsi):
         """
         Generate Random Tiles within a WSI box.
 
@@ -195,71 +260,6 @@ class RandomTiler(Tiler):
 
             if valid_tile_counter >= self.n_tiles:
                 break
-
-    def extract(self, wsi):
-        """
-        Extract tiles consuming `random_tiles_generator` and save them to disk,
-        following this filename pattern:
-            `{prefix}tile_{tiles_counter}_level{level}_{x_ul_wsi}-{y_ul_wsi}-{x_br_wsi}-{y_br_wsi}{suffix}`
-
-        Raises
-        ------
-        TypeError
-            If wsi is not an instance of WSI.
-
-        """
-        # TODO: manage alpha channel
-
-        np.random.seed(self.seed)
-
-        if not isinstance(wsi, WSI):
-            raise TypeError("wsi must be of type WSI.")
-
-        assert (
-            self.level in wsi.levels
-        ), f"Level {level} not available. Please select {', '.join(wsi.levels[:-1])} or {wsi.levels[-1]}"
-
-        random_tiles = self.random_tiles_generator(wsi)
-
-        for tiles_counter, (tile, tile_wsi_coords) in enumerate(random_tiles):
-            tile_filename = self._tile_output_path(tile_wsi_coords, tiles_counter)
-            tile.save(tile_filename)
-            print(f"\t Tile {tiles_counter} saved: {tile_filename}")
-        print(f"{tiles_counter} Random Tiles have been saved.")
-
-    def _random_tile_coordinates(self, wsi):
-        """Return random tile level-0 Coordinates within the tissue box.
-
-        Parameters
-        ----------
-        wsi : WSI
-            WSI from which calculate the coordinates.
-            Needed to calculate the box.
-
-        Returns
-        -------
-        Coordinates
-            Random tile Coordinates at level 0
-        """
-        box_coords_lvl = self.box_coords_lvl(wsi)
-        tile_w_lvl, tile_h_lvl = self.tile_size
-
-        x_ul_lvl = np.random.randint(
-            box_coords_lvl.x_ul, box_coords_lvl.x_br - (tile_w_lvl + 1),
-        )
-        y_ul_lvl = np.random.randint(
-            box_coords_lvl.y_ul, box_coords_lvl.y_br - (tile_h_lvl + 1),
-        )
-        x_br_lvl = x_ul_lvl + tile_w_lvl
-        y_br_lvl = y_ul_lvl + tile_h_lvl
-
-        tile_wsi_coords = scale_coordinates(
-            reference_coords=(x_ul_lvl, y_ul_lvl, x_br_lvl, y_br_lvl),
-            reference_size=wsi.get_dimensions(level=self.level),
-            target_size=wsi.get_dimensions(level=0),
-        )
-
-        return tile_wsi_coords
 
     def _tile_output_path(self, tile_wsi_coords, tiles_counter):
         x_ul_wsi, y_ul_wsi, x_br_wsi, y_br_wsi = tile_wsi_coords
