@@ -25,6 +25,10 @@ class TCGAWSIDownloader:
     def output_folder(self):
         return self._output_folder
 
+    @property
+    def not_downloaded(self):
+        return self._not_downloaded
+
     @staticmethod
     def _download_single_wsi(file_uuid, output_filename):
         """Download a single WSI from TCGA data portal.
