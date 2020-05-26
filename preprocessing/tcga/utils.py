@@ -50,4 +50,17 @@ def wsi_filename_to_wsi_id(wsi_filename):
 
 
 def tile_filename_to_wsi_filename(tile_filename):
+    """Compute WSI filename from a tile filename (which is extracted from that WSI)
+
+    Parameters
+    ----------
+    tile_filename : str
+        Tile filename
+
+    Returns
+    -------
+    str
+        WSI filename
+        
+    """
     return tile_filename.split("_")[0]
