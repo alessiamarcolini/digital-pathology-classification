@@ -92,7 +92,7 @@ class TCGAWSIDownloader:
                 os.remove(output_path)
                 to_skip = False
             else:
-                to_slip = True
+                to_skip = True
         else:
             to_skip = False
         return to_skip
