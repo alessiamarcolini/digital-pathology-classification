@@ -1,5 +1,7 @@
 import os
 
+import pandas as pd
+
 
 def wsi_filename_to_patient(wsi_filename):
     """
@@ -64,3 +66,20 @@ def tile_filename_to_wsi_filename(tile_filename):
         
     """
     return tile_filename.split("_")[0]
+
+
+def read_clinical_file(filename):
+    """Read TCGA clinical file
+
+    Parameters
+    ----------
+    filename : str or pathlib.Path
+        Path to the clinical file
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame representing the clinical file
+    """
+    clinical = pd.read_csv(filename, sep="\t")
+    return clinical
