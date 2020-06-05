@@ -178,13 +178,13 @@ class RandomTiler(Tiler):
         random_tiles = self._random_tiles_generator(wsi)
 
         for tiles_counter, (tile, tile_wsi_coords) in enumerate(random_tiles):
-            tile_filename = self._tile_output_path(tile_wsi_coords, tiles_counter)
+            tile_filename = self._tile_filename(tile_wsi_coords, tiles_counter)
             tile.save(tile_filename)
             print(f"\t Tile {tiles_counter} saved: {tile_filename}")
         print(f"{tiles_counter} Random Tiles have been saved.")
 
     def _random_tile_coordinates(self, wsi):
-        """Return random tile level-0 Coordinates within the tissue box.
+        """Return 0-level Coordinates of a tile picked at random within the tissue box.
 
         Parameters
         ----------
@@ -261,7 +261,7 @@ class RandomTiler(Tiler):
             if valid_tile_counter >= self.n_tiles:
                 break
 
-    def _tile_output_path(self, tile_wsi_coords, tiles_counter):
+    def _tile_filename(self, tile_wsi_coords, tiles_counter):
         x_ul_wsi, y_ul_wsi, x_br_wsi, y_br_wsi = tile_wsi_coords
         tile_filename = f"{self.prefix}tile_{tiles_counter}_level{self.level}_{x_ul_wsi}-{y_ul_wsi}-{x_br_wsi}-{y_br_wsi}{self.suffix}"
         return tile_filename
