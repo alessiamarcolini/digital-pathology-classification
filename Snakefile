@@ -10,6 +10,7 @@ TILES_PER_SVS_DIR = DATA_DIR / 'tiles_per_svs'
 VALID_TILES_CSV_FILENAME = DATA_DIR / 'valid_tiles.csv'
 CLINICAL_FILE = DATA_DIR / 'clinical.tsv'
 LABELS_FILE = DATA_DIR / 'labels.csv'
+SPLITTED_PW_LABELS_FILE = DATA_DIR / 'labels_splitted_pw.csv'
 
 LABELS = ['primary_diagnosis']
 
@@ -64,3 +65,10 @@ rule prepare_labels:
     shell:
         'python preprocessing_prepare_labels_tcga.py {input[0]} {input[1]} {output} --label_cols {LABELS}'
 
+rule split_train_test_pw:
+    input:
+        LABELS_FILE
+    output:
+        SPLITTED_PW_LABELS_FILE
+    shell:
+        'python preprocessing_split_pw.py {input} {output} --label_cols {LABELS} --stratify'
