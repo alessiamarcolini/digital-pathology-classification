@@ -25,6 +25,36 @@ def reverse_dict(dictionary):
 
 
 def encode_label(dataframe, column, column_encoded, encoding_dictionary=None):
+    """Encode ``column`` label in ``dataframe`` with ``encoding_dictionary`` provided.
+
+    Parameters
+    ----------
+    dataframe : pandas.DataFrame
+        The DataFrame to read and to write to.
+    column : str
+        Name of the column to encode
+    column_encoded : str
+        Name of the encoded column, which will be added to ``dataframe``.
+    encoding_dictionary : dict, optional
+        Dictionary used to encode values, where the keys are the original values and the
+        values are the encoded values. If None (which is the default) each categorical
+        value will be mapped to an integer (0 to n_values - 1).
+
+    Returns
+    -------
+    pandas.DataFrame
+        A copy of ``dataframe`` with the new column ``column_encoded``.
+
+    dict
+        Encoding dict reversed
+
+    Raises
+    ------
+    ValueError
+        If the column ``column`` does not exist in ``dataframe``.
+    ValueError
+        If the ``encoding_dict`` is missing some values to encode (keys).
+    """
 
     if column not in dataframe.columns:
         raise ValueError(f"Column {column} does not exist in dataframe")
