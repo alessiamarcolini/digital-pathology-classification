@@ -2,7 +2,7 @@ import argparse
 import os
 
 from preprocessing.check_tiles import check_tile, save_csv
-from preprocessing.tcga_utils import (
+from preprocessing.tcga.utils import (
     tile_filename_to_wsi_filename,
     wsi_filename_to_patient,
     wsi_filename_to_wsi_id,
