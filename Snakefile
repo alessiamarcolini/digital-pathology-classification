@@ -8,6 +8,10 @@ SVS_DIR = DATA_DIR / 'svs'
 TILES_DIR = DATA_DIR / 'tiles'
 TILES_PER_SVS_DIR = DATA_DIR / 'tiles_per_svs'
 VALID_TILES_CSV_FILENAME = DATA_DIR / 'valid_tiles.csv'
+CLINICAL_FILE = DATA_DIR / 'clinical.tsv'
+LABELS_FILE = DATA_DIR / 'labels.csv'
+
+LABELS = ['primary_diagnosis']
 
 SVS_filenames = [f for f in os.listdir(SVS_DIR) if f.endswith('.svs')]
 SVS_filenames_no_ext = [os.path.splitext(f)[0] for f in SVS_filenames]
@@ -50,3 +54,13 @@ rule recompact_valid_tiles:
         VALID_TILES_CSV_FILENAME
     shell:
         'python recompact_valid_tiles.py --tiles_dirs {input.tiles_dirs} --valid_tiles_summaries_path {input.valid_tiles_summaries} --output_tiles_folder {output[0]} --valid_tiles_csv_path {output[1]}'
+
+rule prepare_labels:
+    input:
+        VALID_TILES_CSV_FILENAME,
+        CLINICAL_FILE
+    output:
+        LABELS_FILE
+    shell:
+        'python preprocessing_prepare_labels_tcga.py {input[0]} {input[1]} {output} --label_cols {LABELS}'
+
